@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+        <title>日志</title>
+     <script src="./js/vue.global.js"></script>
+    <script src="./js/axios.js"></script>    
+    <link rel="stylesheet" href="./css/element-plus.css">
+    <script src="./js/element-plus.js"></script>
+    <script src="./tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="./js/jquery-3.4.1.min.js"></script>  
+    <script src="./js/JsFileSaver.js"></script>      
+    <script src="./js/recorder-core.js" charset="UTF-8"></script>
+    <script src="./js/wav.js" charset="UTF-8"></script>
+    <script src="./js/pcm.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="./css/vant.css" />
+    <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+    <script src="./js/vant.min.js"></script>
+    <script type="text/javascript">
+        function invokeCSharpAction(data)
+        {
+            try{
+                window.webkit.messageHandlers.invokeAction.postMessage(data);
+            }catch (err) {
+            }
+        }
+    </script>
+    </head>
+    <body style="padding: 0px;margin:0px;">
+    <div id="app">
+
+    <!-- 主页 -->
+    <div style="background:#f5f6f7;width:100vw;height: 100vh;">
+        <div  v-if="titleShow"  style="display:flex;padding:20px;height: 27px;position: fixed;top: 0px;width:calc(100vw - 40px);background: #f5f6f7;z-index: 100;">
+            <div style="width: 60px;" @click="closeWindow()"><img src="./image/zuojiantou.png" style="width:20px;height:20px;" /></div>
+            <div style="flex-grow: 1;color: rgba(0, 0, 0, 0.85);text-align: center;font-size: 20px;">项目日志</div>
+            <div style="width:60px;color: #0072FD;font-size: 18px;text-align: right;" @click="submit(0)"><span v-if="type != 'check'">保存</span></div>  
+        </div>
+        <div style="height:67px;"></div>
+        <div class="main-item">
+            <div style="display: flex;">
+                <div style="display:flex;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>基本信息</strong></div>                        
+                </div>
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);">工程名称</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                {{form.ProjectName}}&nbsp;
+                </div>    
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">编号</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.No" :readonly="type == 'check'" label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);">记录时间<span style="color:red;">*</span></div>
+                <div style="color:rgba(0, 0, 0, 0.25);margin-left:auto;min-width: 75px;" @click="jiluShow=true">
+                <span :style="{color:form.Date!='请选择'?'#323233':''}">{{form.Date}}</span> &nbsp;〉
+                </div>
+                <van-calendar v-if="type != 'check'" v-model:show="jiluShow" :min-date="minDate" :max-date="maxDate"  @confirm="onJiluConfirm" />    
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;white-space: nowrap;">累计施工天数(天)</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.CumulativeDayNum" :readonly="type == 'check'" type="number"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">天气</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.Weather" :readonly="type == 'check'"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">最高温度(℃)</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.MaximumTemperature" :readonly="type == 'check'" type="number"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">最低温度(℃)</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.MinimumTemperature" :readonly="type == 'check'" type="number"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">风向</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.WindDirection" :readonly="type == 'check'"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <div class="main-item1">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">风力</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-field v-model="form.WindPower" :readonly="type == 'check'"  label="" placeholder="请输入" style="text-align: right;"  />    
+                </div>                  
+            </div>
+        </div>
+        <!--  -->
+        <div class="main-item">
+            <div style="display: flex;">
+                <div style="display:flex;width: 100%;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>主要施工情况</strong></div>
+                    <el-button v-if="type != 'check'" type="primary" size="small" @click="openRelevanceList" style="margin-left: auto;" >关联信息</el-button>                        
+                </div>
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包人员动态</div> 
+                </div>
+                <div v-if="type != 'check'" style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorPersonSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorPersonSituation" class="main-item">
+            <div v-html="form.ContractorPersonSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包人材料</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorMaterialSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorMaterialSituation" class="main-item">
+            <div v-html="form.ContractorMaterialSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包商机械状况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorMechanicalSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorMechanicalSituation" class="main-item">
+            <div v-html="form.ContractorMechanicalSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包商工作情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorPerformance')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorPerformance" class="main-item">
+            <div v-html="form.ContractorPerformance" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">施工试验、材料试验情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorExperimentalSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorExperimentalSituation" class="main-item">
+            <div v-html="form.ContractorExperimentalSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包商文件提交情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorSubmissionStatus')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorSubmissionStatus" class="main-item">
+            <div v-html="form.ContractorSubmissionStatus" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">与承包商现场负责人的交流情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('ContractorHeadTalkStatus')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.ContractorHeadTalkStatus" class="main-item">
+            <div v-html="form.ContractorHeadTalkStatus" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+
+        <!--  -->
+
+        <div class="main-item">
+            <div style="display: flex;">
+                <div style="display:flex;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>主要监理工作</strong></div>                        
+                </div>
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">监理人员动态</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('SupervisionPersonnelDynamics')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.SupervisionPersonnelDynamics" class="main-item">
+            <div v-html="form.SupervisionPersonnelDynamics" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>    
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">验收情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('AcceptanceSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.AcceptanceSituation" class="main-item">
+            <div v-html="form.AcceptanceSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>        
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">监理人员工作情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('SupervisionerWorkSituation')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.SupervisionerWorkSituation" class="main-item">
+            <div v-html="form.SupervisionerWorkSituation" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">监理人员发出通知和指令情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('SupervisionNotice')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.SupervisionNotice" class="main-item">
+            <div v-html="form.SupervisionNotice" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">监理人员参加有关会议情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('MeetingStatus')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.MeetingStatus" class="main-item">
+            <div v-html="form.MeetingStatus" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">内部交流情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('InternalCommunication')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.InternalCommunication" class="main-item">
+            <div v-html="form.InternalCommunication" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <!-- 改动 -->
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">业主交流情况</div> 
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('PartyACommunication')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.PartyACommunication" class="main-item">
+            <div v-html="form.PartyACommunication" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <!--  -->
+        <div class="main-item">
+            <div style="display: flex;">
+                <div style="display:flex;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>问题及处理情况</strong></div>                        
+                </div>
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">承包商对通知及指令的回复执行情况</div>  
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('NoticeReply')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.NoticeReply" class="main-item">
+            <div v-html="form.NoticeReply" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">设计变更与工程洽商情况</div>  
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('DesignChangeAndTalk')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.DesignChangeAndTalk" class="main-item">
+            <div v-html="form.DesignChangeAndTalk" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <!--  -->
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>其他说明事项</strong></div>    
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;" @click="toEdit('Others')">
+                    请输入 &nbsp;〉
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.Others" class="main-item">
+            <div v-html="form.Others" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+            </div>
+        </div>
+        <!--  -->
+        <div class="main-item">
+            <div style="display:flex;">
+                <div style="display: flex;">
+                    <div style="width:8px;height:20px;background: #0072FD;"></div>
+                    <div style="margin-left:10px;color: rgba(0, 0, 0, 0.85);"><strong>文件</strong></div>    
+                </div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.25);margin-left:auto;">
+                    <van-uploader  :after-read="afterRead">
+                        <div style="display:flex;">
+                            <div style="max-width: 200px;overflow:hidden;white-space: nowrap;text-overflow: ellipsis;"><span>请选择</span></div>
+                            <div>&nbsp;&nbsp;〉</div>
+                        </div>
+                        
+                    </van-uploader>
+                    
+                </div>              
+            </div>
+        </div>
+        <div v-if="form.FileList.length > 0 && showFileList" class="main-item">
+            <div v-for="(item,index) in form.FileList" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;display: flex;padding: 5px 5px 5px 0px;align-items: center;">
+                <div style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;color:rgba(0, 0, 0, 0.85);"  @click="toPreviewPage(item)">{{item['FileName']}}{{item['FileExtension']}}</div>
+                <div v-if="type != 'check'"  @click="delFile(index)" style="width:30px;text-align:right;margin-left: auto;"><img src="./image/shanchu.png" style="width:16px;height: 16px;"></div>
+                <div v-else style="width:30px;text-align:right;margin-left: auto;"><el-button v-if="ifDownloaded(item)" type="info" link>已下载</el-button><el-button v-else type="primary" @click="downloadFile(item)" link>下载</el-button></div>
+            </div>
+        </div>
+        <!--  -->
+        <div class="main-item">
+            <div style="display:flex;align-items: center;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">记录人(签字)</div>
+                <div v-if="type != 'check'"  style="color:rgba(0, 0, 0, 0.85);margin-left:auto;display: flex;align-items: center;">
+                    <van-radio-group v-model="recordType" direction="horizontal" shape="square" @change="changeRecorder" style="font-size: 12px;">
+                      <van-radio name="1" icon-size="15px">使用签名</van-radio>
+                      <van-radio name="2" icon-size="15px">使用电子签名</van-radio>
+                    </van-radio-group>    
+                </div>                  
+            </div>
+        </div>
+        <div v-if="form.IsSign || form.IsEsignature" class="main-item">
+            <div v-if="form.IsSign" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+                {{RecordPersonName}}
+            </div>
+            <div v-if="form.IsEsignature" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+                <img :src="ERecorderUrl" style="width:45%;height:auto;" />
+            </div>
+        </div>
+        <!--  -->
+        <div v-if="showReview" class="main-item">
+            <div style="display:flex;">
+                <div style="color:rgba(0, 0, 0, 0.65);display: flex;align-items: center;">审阅(签字)</div>
+                <div style="color:rgba(0, 0, 0, 0.85);margin-left:auto;">
+                    <van-radio-group v-model="reviewType" direction="horizontal" shape="square" @change="changeReviewer" style="font-size: 12px;">
+                      <van-radio name="1" icon-size="15px">使用签名</van-radio>
+                      <van-radio name="2" icon-size="15px">使用电子签名</van-radio>
+                    </van-radio-group>    
+                </div>                  
+            </div>
+        </div>
+        <div v-if="(form.ReviewerIsSign || form.ReviewerIsEsignature) && showReview" class="main-item">
+            <div v-if="form.ReviewerIsSign" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+                {{ReviewerPersonName}}
+            </div>
+            <div v-if="form.ReviewerIsEsignature" style="color:rgba(189, 189, 189, 0.7);font-size: 14px;">
+                <img :src="EReviewerUrl" style="width:45%;height:auto;" />
+            </div>
+        </div>
+        <!--  -->
+        <div style="height:100px;"></div>
+        <div v-if="type == 'check' && showReview" style="position:fixed;bottom: 0px;width: 100vw;">
+            <div style="height:10px;background:#f5f6f7;"></div>
+            <div style="padding: 15px;background: white;text-align: center;">
+
+                <van-button type="primary" size="large" style="width: 70%;margin: auto;" @click="submitShenYue">审阅</van-button>
+            </div>
+        </div>
+        <div v-else-if="type != 'check'" style="position:fixed;bottom: 0px;width: 100vw;">
+            <div style="height:10px;background:#f5f6f7;"></div>
+            <div style="padding: 15px;background: white;text-align: center;">
+
+                <van-button type="primary" size="large" style="width: 70%;margin: auto;" @click="submit(1)">提交</van-button>
+            </div>
+        </div>
+
+
+    </div>
+    <!-- /主页  -->
+
+    <!-- 编辑页 -->
+    <div v-show="popShow" class="edit-main">
+        <div style="display:flex;margin-bottom: 20px;">
+            <div style="width: 60px;" @click="confirmEdit(0)"><img src="./image/zuojiantou.png" style="width:20px;height:20px;" /></div>
+            <div style="flex-grow: 1;color: rgba(0, 0, 0, 0.85);text-align: center;font-size: 20px;">编辑</div>
+            <div style="width:60px;color: #0072FD;font-size: 18px;text-align: right;" @click="confirmEdit(1)">确定</div>  
+        </div>
+        <textarea id="varArea">{{richCon}}</textarea>
+        <div style="display: flex;margin-top: 15px;">
+            <!-- 话筒使用document.querySelector('#btnConnect').addEventListener('click',that.insertSound)注册点击事件，使用VUE的@click有诡异错误script erroe -->
+            <div id="btnConnect"><img src="./image/huatong.png" style="width:37px;height:37px;" /></div>
+            <div id="insert-img" @click="insertImg" style="margin-left:12px;" ><img src="./image/tupian.png" style="width:37px;height:37px;" /></div>
+     
+        </div>
+                        
+    </div>
+    <!-- /编辑页 -->
+    
+        <!-- 关联信息页 -->
+    <div v-show="relevanceShow" class="edit-main" style="background:white;padding:0px;width: 100vw;height: 100vh;display: flex;flex-direction: column;gap:20px;">
+        <div style="background:#f5f6f7;padding:20px;text-align:center;color: rgba(0, 0, 0, 0.85);font-size: 20px;">人员选择</div>
+        <div class="relevance-list" style="max-height:calc(100vh - 100px);overflow-y: scroll;">
+<!--           <el-checkbox-group v-model="relevancePeople"  style="display: flex;flex-direction: column;padding-left: 42vw;">  
+            <el-checkbox v-for="item in relevancePeopleOptions" :label="item.Employee_No" >{{item.Staff_Name}} </el-checkbox>
+          </el-checkbox-group> -->
+          <van-checkbox-group v-model="relevancePeople" style="display: flex;flex-direction: column;padding-left: 42vw;gap:20px;">
+              <van-checkbox v-for="item in relevancePeopleOptions" :name="item.Employee_No"> {{item.Staff_Name}} </van-checkbox>
+            </van-checkbox-group>
+        </div>
+        <div style="background:#f5f6f7;margin-top:auto;padding: 20px 0px;text-align: center;">
+            <el-button type="primary" @click="toRelevance">
+          生成
+        </el-button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <el-button type="danger" @click="closeRelevance">取消</el-button>
+        </div>
+                        
+    </div>
+    <!-- /关联信息页 -->
+
+
+
+    <div id="dialog" class="dialog-main">
+        <div id="dialog-con" style="color:white;">语音识别中，请说话...</div>
+        <div style="margin-top:70px;text-align: center;display: flex;justify-content: center;">
+            <!-- 停止录音使用document.querySelector('#btnStop').addEventListener('click',that.insertSound)注册点击事件，不使用VUE的@click -->
+            <div  id="btnStop" style="width: 60px; padding: 20px 0px;border-radius: 30px;background: red;border: none;color:white;">停止</div>
+        </div>
+    </div>
+    </div>         
+
+        <div style="display: none;">
+            <input id="wssip" type="text" onchange="addresschange()" style=" width: 100%;height:100%" value="ws://124.131.9.195:18333"/>
+            <a id="wsslink"  href="#" onclick="window.open('https://127.0.0.1:10095/', '_blank')"><div id="info_wslink">点此处手工授权wss://127.0.0.1:10095/</div></a> 
+            <div>   
+                <label><input name="recoder_mode" onclick="on_recoder_mode_change()" type="radio" value="mic" checked="true"/>麦克风 </label>&nbsp;&nbsp;
+                <label><input name="recoder_mode" onclick="on_recoder_mode_change()" type="radio" value="file" />文件 </label> 
+            </div>
+             <div id="mic_mode_div">  
+                  <label><input name="asr_mode" type="radio" value="2pass" checked="true"/>2pass </label>&nbsp;&nbsp;
+                  <label><input name="asr_mode" type="radio" value="online" />online </label>&nbsp;&nbsp;
+                  <label><input name="asr_mode" type="radio" value="offline" />offline </label>
+            </div> 
+            <div id="rec_mode_div">
+              <input type="file" id="upfile">
+            </div>
+            <input  type="text"  id="varHot" /> 
+            <div id="info_div" style="display:none;">请点击开始</div>
+            <div>
+                <button>连接</button>
+                <button id="btnStart">开始</button>
+                <button>停止</button>
+            </div>
+            <audio id="audio_record" type="audio/wav" controls></audio>
+        </div>
+
+
+        <script src="./js/wsconnecter.js" charset="utf-8"></script>
+        <script src="./js/main.js" charset="utf-8"></script>
+        <script src="./js/vconsole.min.js"></script>
+        
+    </body>
+    <script  lang="ts">
+
+        const App = {
+        created() {
+            var _this = this
+             //这里可放到全局
+            window.showLeftTreeXzs = function() {
+                return _this.showLeftTreeXzs()
+            }
+        },
+        data() {
+          return {
+            titleShow:true,
+            ElLoading:ElementPlus.ElLoading,
+            ElMessage:ElementPlus.ElMessage,
+            showLoadingToast:vant.showLoadingToast,
+            showFailToast:vant.showFailToast,
+            closeToast:vant.closeToast,
+            checked:0,
+            richCon:'aaaaa',
+            currentDate:['2021','01','01'],
+            minDate: new Date(2020, 0, 1),
+            maxDate: new Date(2050, 5, 1),
+            jiluShow:false,
+            popShow:false,
+            currentEditer:'',
+            loadShow:true,
+            editTop:0,
+            recordType:'',
+            reviewType:'',
+            showReview:false,
+            type:'',
+            showFileList:true,
+            RecordPersonName:'',
+            ERecorderUrl:'',
+            ReviewerPersonName:'',
+            EReviewerUrl:'',
+            loadingInstance:'',
+            // BY LY BEGIN
+            selectDate:'',
+            relevanceShow:false,
+            relevancePeople:[],
+            relevancePeopleOptions:[],
+            inputJson:JSON.parse(this.getQueryString('json')?this.getQueryString('json'):'{}'),
+            // BY LY END
+            form:{
+                Id:0, //主键
+                ProjectNo:JSON.parse(this.getQueryString('json')?this.getQueryString('json'):'{}')?.ProjectNo, //项目Id
+                ProjectName:JSON.parse(this.getQueryString('json')?this.getQueryString('json'):'{}')?.ProjectName,//项目名称
+                No:'', //编号
+                Date:'请选择', //记录时间
+                CumulativeDayNum:'', //累计实施天数
+                Weather:'', //天气
+                MaximumTemperature:'', //最高温度
+                MinimumTemperature:'', //最低温度
+                WindDirection:'', //风向
+                WindPower:'', //风力
+                ContractorPersonSituation:'', //承包商人员情况
+                ContractorMaterialSituation:'',//承包商材料进场及使用情况
+                ContractorMechanicalSituation:'',//承包商机械情况
+                ContractorPerformance:'',//承包商工作情况
+                ContractorExperimentalSituation:'',//承包商施工试验、材料试验情况
+                ContractorSubmissionStatus:'',//承包商文件提交情况
+                ContractorHeadTalkStatus:'',//与承包商负责人交流情况
+                SupervisionPersonnelDynamics:'',//监理人员动态
+                AcceptanceSituation:'',//验收情况
+                SupervisionerWorkSituation:'',//监理人员工作情况
+                SupervisionNotice:'',//监理通知单情况
+                MeetingStatus:'',//监理参加会议情况
+                InternalCommunication:'',//内部交流情况
+                PartyACommunication:'', //业主交流情况
+                NoticeReply:'', //通知及指令回复执行情况
+                DesignChangeAndTalk:'', //设计变更与工程洽商情况
+                Others:'', //其他说明情况
+                IsSign:false, //记录人是否普通签名
+                IsEsignature:false,//记录人是否电子签名
+                RecorderNo:JSON.parse(this.getQueryString('json')?this.getQueryString('json'):'{}')?.RecorderNo,//记录人编号
+                RecordTime:'',//记录时间
+                ReviewerIsSign:false, //审阅人是否普通签名
+                ReviewerIsEsignature:false, //审阅人是否电子签名
+                ReviewerPersonNo:JSON.parse(this.getQueryString('json')?this.getQueryString('json'):'{}')?.RecorderNo,//审阅人编号
+                State:0, //1提交，0保存，2作废
+                IsDelete:0, //删除0：否1是
+                FileList:[],//附件列表
+            }
+          }
+        },
+        methods:{
+
+            insertImg(){
+               $("button[aria-label='插入/编辑图片']").click(); 
+            },
+            insertSound(){
+                window['start']();
+            },
+            stopSound(){
+                window['stop']();
+            },
+            onJiluConfirm(value){
+                console.log(this.form);
+                let day = value.getDate();
+                let month  = value.getMonth()+1;
+                let year = value.getFullYear();
+                let date = year+'-'+month+'-'+day;
+                axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetProjectLogIsHasForWeb?date="+date+"&projectNo="+this.form.ProjectNo+"&employeeNo="+this.form.RecorderNo).then((res) => {
+                    if (res.data.ResultCode == '0000') {
+                        if(res.data.Data){
+                            this.showFailToast('所选日期日志已存在');
+                            return;
+                        }else{
+                            this.jiluShow = false;
+                            this.form.Date = date;
+
+                            // BY LY BEGIN
+                            let temp = date.split('-');
+                            if(temp[1].length == 1){
+                                temp[1] = '0'+temp[1];
+                            }
+                            if(temp[2].length == 1){
+                                temp[2] = '0'+temp[2];
+                            }
+                            this.selectDate = temp[0]+'-'+temp[1]+'-'+temp[2];
+                                
+
+                          axios.get('http://10.31.6.3:7241/api/spv/New_SpvLog/GetWeather?provinceNum='+this.inputJson.provinceNum+'&date='+this.selectDate).then((res)=>{
+                                this.form.Weather = res.data.Data.Weather?res.data.Data.Weather:'';
+                                this.form.MaximumTemperature = res.data.Data.MaxTemperature?res.data.Data.MaxTemperature:'';
+                                this.form.MinimumTemperature = res.data.Data.MinTemperature?res.data.Data.MinTemperature:'';
+                                this.form.WindDirection = res.data.Data.WindDirection?res.data.Data.WindDirection:'';
+                                this.form.WindPower = res.data.Data.WindPower?res.data.Data.WindPower:''; 
+                        }) 
+
+                          // BY LY END
+                        }
+                    } else {
+                        this.showFailToast('网络错误');
+                        return;
+                    }
+                });
+                
+
+            },
+            toEdit(which){
+                this.titleShow = false;
+                tinymce.get('varArea').setContent(this.form[which]);
+                this.currentEditer = which;
+                this.popShow = true;
+                
+            },
+            getPopShow(){
+                return this.popShow;
+            },
+            confirmEdit(action){
+                console.log(111);
+                if(action == 1){
+                    this.form[this.currentEditer] = tinymce.get('varArea').getContent();    
+                }
+
+                this.popShow = false;
+                this.titleShow = true;
+            },
+            getGuanlian(){
+                this.checked = 1;
+            },
+            afterRead(fileObj){
+                this.showLoadingToast({
+                  message: '加载中...',
+                  forbidClick: true,
+                  loadingType: 'spinner',
+                  position:'middle',
+                  duration:0,
+                });
+              // 此时可以自行将文件上传至服务器
+                let fileForm = new FormData()
+                fileForm.append('file', fileObj.file);
+
+                axios.post("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/UpFileReturnLogFile", fileForm).then((res) => {
+                    console.log(res);
+                    if (res.data.ResultCode == '0000') {
+                        this.form.FileList.push({"FileName":res.data.Data.FileName,"FileExtension":res.data.Data.FileExtension,"FileSize":res.data.Data.FileSize,"FileSaveRelativeUrl":res.data.Data.FileSaveRelativeUrl});
+                        this.closeToast();
+                    } else {
+                        this.showFailToast('上传失败');
+                    }
+              });
+            },
+            getQueryString(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+                var r = window.location.search.substr(1).match(reg); //获取url中"?"符后的字符串并正则匹配
+                var context = "";
+                if (r != null)
+                    context = decodeURIComponent(r[2]);
+                reg = null;
+                r = null;
+                return context == null || context == "" || context == "undefined" ? "" : context;
+            },
+            changeRecorder(val){
+                if(val == 1){
+                    this.form.IsSign = true;
+                    this.form.IsEsignature = false;
+                    this.RecordPersonName = this.getQueryString('EmployeeName');
+                }
+                if(val == 2){
+                    this.form.IsSign = false;
+                    this.form.IsEsignature = true;
+                    axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetStaffEsignatureUrl?EmployeeNo="+this.form.RecorderNo).then((res)=>{
+                        if(res.data.ResultCode == '0000'){
+                            this.ERecorderUrl = res.data.Data;
+                        }
+                    })
+                }
+            },
+            changeReviewer(val){
+                if(val == 1){
+                    this.form.ReviewerIsSign = true;
+                    this.form.ReviewerIsEsignature = false;
+                    this.ReviewerPersonName = this.getQueryString('EmployeeName');
+                }
+                if(val == 2){
+                    this.form.ReviewerIsSign = false;
+                    this.form.ReviewerIsEsignature = true;
+                    axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetStaffEsignatureUrl?EmployeeNo="+this.form.ReviewerPersonNo).then((res)=>{
+                        if(res.data.ResultCode == '0000'){
+                            this.EReviewerUrl = res.data.Data;
+                        }
+                    })
+                }
+            },
+            submit(action){
+                if(this.form.Date == '请选择'){
+                    this.showFailToast('请选择记录时间');
+                    return; 
+                }
+
+                axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetProjectLogIsHasForWeb?date="+this.form.Date+"&projectNo="+this.form.ProjectNo+"&employeeNo="+this.form.RecorderNo).then((res) => {
+                    if (res.data.ResultCode == '0000') {
+                        if(res.data.Data){
+                            this.showFailToast('所选日期日志已存在');
+                            return;
+                        }else{
+                            this.form.State = action;
+
+                            axios.post("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/SaveOrEditProjectLog", this.form).then((res) => {
+                            if (res.data.ResultCode == '0000') {
+                                if(action ===0){
+                                  this.showFailToast({message:'保存成功',onClose:()=>{testJsObject.PageClose();}});  
+                                }
+                                if(action === 1){
+                                  this.showFailToast({message:'提交成功',onClose:()=>{testJsObject.PageClose()}});  
+                                }
+                            } else {
+                                this.showFailToast('网络错误');
+                            }
+                          });   
+                        }
+                    } else {
+                        this.showFailToast('网络错误');
+                        return;
+                    }
+                });
+
+
+            },
+            submitShenYue(){
+                console.log('pp',"https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/SetProjectLogReviewResult?Id="+this.form.Id+'&ReviewerIsSign='+this.form.IsSign+'&ReviewerPersonNo='+this.form.ReviewerPersonNo+'&ReviewerIsEsignature='+this.form.ReviewerIsEsignature);
+                axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/SetProjectLogReviewResult?Id="+this.form.Id+'&ReviewerIsSign='+this.form.IsSign+'&ReviewerPersonNo='+this.form.ReviewerPersonNo+'&ReviewerIsEsignature='+this.form.ReviewerIsEsignature).then((res)=>{
+                        if(res.data.Data){
+                            this.showFailToast({message:'审阅成功',onClose:()=>{testJsObject.PageClose()}});
+                        }else{
+                            this.showFailToast('审阅失败,请重试');
+                        }             
+                }) 
+            },
+            delFile(index){
+                this.form.FileList.splice(index,1);
+            },
+            downloadFile(item){
+                this.loadingInstance = this.ElLoading.service({ fullscreen: true });
+                var data = '/'+item.FileSaveRelativeUrl;
+                invokeCSharpAction(data);  //ios
+                testJsObject.DownLoad(data); //android
+            },
+            closeWindow(){
+                invokeCSharpAction('closeWindow');  //ios
+                testJsObject.PageClose();   //android
+            },
+            saveDownloadInfo(remoteUrl,localUrl){
+                this.loadingInstance.close();
+                localStorage.setItem('downloaded'+this.getQueryString('EmployeeNo')+remoteUrl,localUrl);
+                this.showFileList = false;
+                setTimeout(()=>{
+                    this.showFileList = true;
+                },100)
+            },
+            ifDownloaded(item){
+                let userId = this.getQueryString('EmployeeNo');
+                if(localStorage.getItem('downloaded'+userId+'/'+item.FileSaveRelativeUrl)){
+                    return true;
+                }else{
+                    return false;
+                }
+                
+            },
+            toPreviewPage(item){
+                if(this.ifDownloaded(item)){
+                    window.location.href = "./preview_page.html?localUrl="+localStorage.getItem('downloaded'+this.getQueryString('EmployeeNo')+'/'+item.FileSaveRelativeUrl)+'&FileName='+item.FileName+item.FileExtension+'&remoteUrl=/'+item.FileSaveRelativeUrl;
+                }else{
+                    if(this.getQueryString('Type') != 'add' ){
+                    window.location.href="./download_page.html?EmployeeNo="+this.getQueryString('EmployeeNo')+'&file='+JSON.stringify(item);
+                    }
+                }
+            },
+            // BY LY BEGIN
+            openRelevanceList(){
+                this.relevancePeople = [];
+                  axios.get('http://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetPersonalLogMembers?projectId='+this.form.ProjectNo+'&recordTime='+this.selectDate).then((res)=>{
+                    this.relevancePeopleOptions = res.data.Data;
+                    this.relevanceShow= true;
+                    this.titleShow = false;
+                  })
+              // this.relevancePeopleOptions.forEach((item)=>{
+              //   this.relevancePeople.push(item.id);
+              // })
+              
+            },
+            closeRelevance(){
+                this.relevanceShow= false;
+                this.titleShow = true;
+            },
+            toRelevance(){
+                
+                axios.get('http://gtcloud.gangtongdata.com/api/spv/New_SpvLog/RelationPersonalLog?projectId='+this.form.ProjectNo+'&recordTime='+this.selectDate+'&employeeNos='+this.relevancePeople.join(',')).then((res)=>{
+
+                    this.form.AcceptanceSituation = this.form.AcceptanceSituation? this.form.AcceptanceSituation + res.data.Data.AcceptanceSituation : res.data.Data.AcceptanceSituation;
+                    this.form.ContractorExperimentalSituation = this.form.ContractorExperimentalSituation? this.form.ContractorExperimentalSituation + res.data.Data.ContractorExperimentalSituation : res.data.Data.ContractorExperimentalSituation;
+                    this.form.ContractorHeadTalkStatus = this.form.ContractorHeadTalkStatus? this.form.ContractorHeadTalkStatus + res.data.Data.ContractorHeadTalkStatus : res.data.Data.ContractorHeadTalkStatus;
+                    this.form.ContractorPerformance = this.form.ContractorPerformance? this.form.ContractorPerformance + res.data.Data.ContractorPerformance : res.data.Data.ContractorPerformance;
+                    this.form.ContractorSubmissionStatus = this.form.ContractorSubmissionStatus? this.form.ContractorSubmissionStatus + res.data.Data.ContractorSubmissionStatus : res.data.Data.ContractorSubmissionStatus;
+                    this.form.DesignChangeAndTalk = this.form.DesignChangeAndTalk? this.form.DesignChangeAndTalk + res.data.Data.DesignChangeAndTalk : res.data.Data.DesignChangeAndTalk;
+                    this.form.MeetingStatus = this.form.MeetingStatus? this.form.MeetingStatus + res.data.Data.MeetingStatus : res.data.Data.MeetingStatus;
+                    this.form.NoticeReply = this.form.NoticeReply? this.form.NoticeReply + res.data.Data.NoticeReply : res.data.Data.NoticeReply;
+                    this.form.Others = this.form.Others? this.form.Others + res.data.Data.Others : res.data.Data.Others;
+                    this.form.SupervisionNotice = this.form.SupervisionNotice? this.form.SupervisionNotice + res.data.Data.SupervisionNotice : res.data.Data.SupervisionNotice;
+                    this.form.SupervisionerWorkSituation = this.form.SupervisionerWorkSituation? this.form.SupervisionerWorkSituation + res.data.Data.SupervisionerWorkSituation : res.data.Data.SupervisionerWorkSituation;
+                    this.relevanceShow = false;
+                  })
+            },
+            // BY LY END
+            // hexToStr(hex,encoding){
+            //   let trimedStr = hex.trim();
+            //   let rawStr = trimedStr.substr(0, 2).toLowerCase() === "0x" ? trimedStr.substr(2) : trimedStr;
+            //   let len = rawStr.length;
+            //   if (len % 2 !== 0) {
+            //     alert("Illegal Format ASCII Code!");
+            //     return "";
+            //   }
+            //   let curCharCode;
+            //   let resultStr = [];
+            //   for (let i = 0; i < len; i = i + 2) {
+            //     curCharCode = parseInt(rawStr.substr(i, 2), 16);
+            //     resultStr.push(curCharCode);
+            //   }
+            //   // encoding为空时默认为utf-8
+            //   let bytesView = new Uint8Array(resultStr);
+            //   let str = new TextDecoder(encoding).decode(bytesView);
+            //   return str;
+            // },
+            // decrypt(str, KEY, IV = ''){
+            //   str = (str + '').replace(/\n*$/g, '').replace(/\n/g, ''); //增加这一行，将换行符替换为空
+            //   let key = CryptoJS.enc.Utf8.parse(KEY);
+            //   let iv = CryptoJS.enc.Utf8.parse(IV);
+            //   let decrypt = CryptoJS.AES.decrypt(str, key, {
+            //     iv: iv,
+            //     mode: CryptoJS.mode.CBC,
+            //     padding: CryptoJS.pad.Pkcs7
+            //   });
+            //   let hex =  decrypt.toString(CryptoJS.enc.Utf8);
+            //   return this.hexToStr(hex,'Utf8');
+            // }
+        },
+        mounted() {
+
+            let that = this;
+
+            let currentDate = new Date();
+            let year = currentDate.getFullYear();
+            let month = currentDate.getMonth(); // 月份是从0开始的
+            let day = currentDate.getDate();
+            that.maxDate = new Date(year, month, day);
+
+            window['getPopShow'] = that.getPopShow;
+            window['confirmEdit'] = that.confirmEdit;
+            window['saveDownloadInfo'] = that.saveDownloadInfo;
+            setInterval(function() {
+                if(localStorage.getItem('prePage') == 'downloaded_page'){
+                    that.showFileList = false;
+                    setTimeout(()=>{
+                        that.showFileList = true;
+                    },100)
+                    localStorage.removeItem('prePage');
+                }
+            }, 600);
+            that.type = that.getQueryString('Type');
+            if(that.type == 'add'){
+                let date = new Date();
+                // that.form.CreateTime = moment(date).format('YYYY-MM-DD HH:mm:ss');
+
+            }
+            let logId = that.getQueryString('Id');
+            if(that.type == 'edit' || that.type == 'reedit' ){
+                axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetProjectLogById?Id="+logId).then((res)=>{
+                    if(that.type == 'reedit'){
+                        res.data.Data.Id = 0;
+                    }
+                    that.form = res.data.Data;
+                    that.form.Date = that.form.Date.substring(0,10);
+                    that.RecordPersonName = that.form.RecorderName;
+                    that.ERecorderUrl = that.form.EsignatureUrl;
+                    that.selectDate = that.form.Date;
+                })                
+            }
+            if(that.type=='check'){
+                axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/GetProjectLogById?Id="+logId).then((res)=>{
+                    console.log('rr',res);
+                    that.form = res.data.Data;
+                    that.form.Date = that.form.Date.substring(0,10);
+                    that.RecordPersonName = that.form.RecorderName;
+                    that.ERecorderUrl = that.form.EsignatureUrl;
+                    that.form.ReviewerPersonNo = that.getQueryString('EmployeeNo');
+                    if(that.form.ReviewerIsSign) that.reviewType = 1;
+                    if(that.form.ReviewerIsEsignature) that.reviewType = 2;
+                    axios.get("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/CanReview?employeeNo="+that.form.ReviewerPersonNo+'&projectNo='+res.data.Data.ProjectNo).then((re)=>{
+                        if(res.data.Data){
+                            that.ReviewerPersonName = that.getQueryString('EmployeeName');
+                        }
+                        that.showReview = re.data.Data;
+                    })   
+                })   
+            }
+
+
+            tinymce.init({
+                selector: '#varArea',
+                language_url: "./js/zh_CN.js", // 语言包的路径，具体路径看自己的项目，文档后面附上中文js文件
+                language: "zh_CN", //语言
+                plugins: 'lists image media table wordcount fullscreen',
+                toolbar: 'image',
+                menubar:false,
+                content_style: "img {max-width:100%;height:auto;}",
+                images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                    if (blobInfo.blob().size / 1024 / 1024 > 20) {
+                      reject({ message: '上传失败，图片大小请控制在 20M 以内', remove: true })
+                      return
+                    } else {
+                      let params = new FormData()
+                      params.append('file', blobInfo.blob())
+                      axios.post("https://gtcloud.gangtongdata.com/api/spv/New_SpvLog/UpFileReturnLogFile", params).then((res) => {
+                        console.log(res);
+                        if (res.data.ResultCode == '0000') {
+                          resolve('https://gtcloud.gangtongdata.com/'+res.data.Data.FileSaveRelativeUrl);
+                        } else {
+
+                        }
+                      });
+                    }
+                }),
+            }).then(()=>{
+               $(".tox-editor-header").hide(); 
+               $(".tox-statusbar__branding").hide();
+            });
+
+            document.querySelector('#btnConnect').addEventListener('click',that.insertSound);
+            document.querySelector('#btnStop').addEventListener('click',that.stopSound);
+            
+        },
+        setup() {
+
+        },
+      };
+      const app = Vue.createApp(App);
+      app.use(ElementPlus);
+      app.use(vant);
+      app.mount("#app");
+
+
+</script>
+<script>
+//初始化一下就可以了，
+// let vConsole = new VConsole();
+
+
+</script>
+<style type="text/css">
+    .main-item{
+       padding:15px 15px 15px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    .main-item1{
+       padding:0px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    input::-ms-input-placeholder{text-align: right;}
+input::-webkit-input-placeholder{text-align: right;}
+input{
+    text-align: right !important;
+    font-size: 16px;
+}
+/*.van-popup--center{
+max-width: 100vw;
+margin: 0px;
+}*/
+p{
+    padding: 0px;
+    margin: 0px;
+}
+.edit-main{
+   background:#f5f6f7;padding:20px;width:calc(100vw - 40px); height:calc(100vh - 40px);position:fixed;top: 0px; 
+}
+.dialog-main{
+    position: fixed;z-index: 9999;height: 100vh;width: 100vw;background: rgba(0, 0, 0,0.4);left: 0px;top: 0px; display: flex;align-items: center;justify-content: center;flex-direction: column;display: none;
+}
+</style>
+</html>

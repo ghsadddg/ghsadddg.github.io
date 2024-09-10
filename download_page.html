@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+        <title>下载</title>
+     <script src="./js/vue.global.js"></script>
+    <script src="./js/axios.js"></script>    
+    <link rel="stylesheet" href="./css/element-plus.css">
+    <script src="./js/element-plus.js"></script>
+    <script src="./tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="./js/jquery-3.4.1.min.js"></script>  
+    <script src="./js/JsFileSaver.js"></script>      
+    <script src="./js/recorder-core.js" charset="UTF-8"></script>
+    <script src="./js/wav.js" charset="UTF-8"></script>
+    <script src="./js/pcm.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="./css/vant.css" />
+    <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+    <script src="./js/vant.min.js"></script>
+    <script type="text/javascript">
+        function invokeCSharpAction(data)
+        {
+            try{
+                window.webkit.messageHandlers.invokeAction.postMessage(data);
+            }catch (err) {
+            }
+        }
+    </script>
+    </head>
+    <body style="padding: 0px;margin:0px;">
+    <div id="app">
+
+    <!-- 主页 -->
+    <div style="width:100vw;height: 100vh;">
+        <div style="display:flex;padding:20px 20px 0px 20px;">
+            <div style="width: 60px;" @click="getPopShow"><img src="./image/zuojiantou.png" style="width:20px;height:20px;" /></div>
+        </div>
+        <div style="text-align: center;margin-top: 80px;">
+            <img src="./image/wenjian.png" />
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:21px;color:rgba(0, 0, 0, 0.85);margin-top: 35px;font-weight: 800;word-wrap: break-word;padding: 0px 20px;">{{fileName}}</div>
+            <div style="font-size: 16px;color: rgba(34, 34, 34, 1);margin-top: 15px;font-weight: 700;">文件大小：{{fileSize}}</div>
+        </div>
+        <div style="margin-top:220px;text-align: center;"><el-button type="primary" size="large" @click="downloadFile" style="width: 200px;background: #0072fd;">下载</el-button></div>
+    </div>
+    <!-- /主页  -->
+
+    </div>         
+    </body>
+    <script  lang="ts">
+
+        const App = {
+        created() {
+        },
+        data() {
+          return {
+            titleShow:true,
+            fileName:'',
+            fileSize:'',
+          }
+        },
+        methods:{
+            getPopShow(){
+                localStorage.setItem('prePage','downloaded_page');
+                history.back();
+            },
+            getQueryString(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+                var r = window.location.search.substr(1).match(reg); //获取url中"?"符后的字符串并正则匹配
+                var context = "";
+                if (r != null)
+                    context = decodeURIComponent(r[2]);
+                reg = null;
+                r = null;
+                return context == null || context == "" || context == "undefined" ? "" : context;
+            },
+            downloadFile(){
+                let item = JSON.parse(this.getQueryString('file'));
+                var data = '/'+item.FileSaveRelativeUrl;
+                invokeCSharpAction(data);  //ios
+                testJsObject.DownLoad(data); //android
+            },
+            saveDownloadInfo(remoteUrl,localUrl){
+                localStorage.setItem('downloaded'+this.getQueryString('EmployeeNo')+remoteUrl,localUrl);
+                window.location.href = "./preview_page.html?localUrl="+localUrl+'&fileName='+this.fileName+'&remoteUrl='+remoteUrl;
+            },
+        },
+        mounted() {
+            window['getPopShow'] = this.getPopShow;
+            window['saveDownloadInfo'] = this.saveDownloadInfo;
+            let file = JSON.parse(this.getQueryString('file'));
+            this.fileName = file['FileName']+file['FileExtension'];
+            this.fileSize = file['FileSize'];
+        },
+        setup() {
+
+        },
+      };
+      const app = Vue.createApp(App);
+      app.use(ElementPlus);
+      app.use(vant);
+      app.mount("#app");
+
+
+</script>
+<script>
+//初始化一下就可以了，
+// let vConsole = new VConsole();
+
+</script>
+<style type="text/css">
+    .main-item{
+       padding:15px 15px 15px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    .main-item1{
+       padding:0px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    input::-ms-input-placeholder{text-align: right;}
+input::-webkit-input-placeholder{text-align: right;}
+input{
+    text-align: right !important;
+    font-size: 16px;
+}
+/*.van-popup--center{
+max-width: 100vw;
+margin: 0px;
+}*/
+p{
+    padding: 0px;
+    margin: 0px;
+}
+.edit-main{
+   background:#f5f6f7;padding:20px;width:calc(100vw - 40px); height:calc(100vh - 40px);position:fixed;top: 0px; 
+}
+.dialog-main{
+    position: fixed;z-index: 9999;height: 100vh;width: 100vw;background: rgba(0, 0, 0,0.4);left: 0px;top: 0px; display: flex;align-items: center;justify-content: center;flex-direction: column;display: none;
+}
+</style>
+</html>

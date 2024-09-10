@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+        <title>下载</title>
+     <script src="./js/vue.global.js"></script>
+    <script src="./js/axios.js"></script>    
+    <link rel="stylesheet" href="./css/element-plus.css">
+    <script src="./js/element-plus.js"></script>
+    <script src="./tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="./js/jquery-3.4.1.min.js"></script>  
+    <script src="./js/JsFileSaver.js"></script>      
+    <script src="./js/recorder-core.js" charset="UTF-8"></script>
+    <script src="./js/wav.js" charset="UTF-8"></script>
+    <script src="./js/pcm.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="./css/vant.css" />
+    <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+    <script src="./js/vant.min.js"></script>
+    <script type="text/javascript">
+        function invokeCSharpAction(data)
+        {
+            try{
+                window.webkit.messageHandlers.invokeAction.postMessage(data);
+            }catch (err) {
+            }
+        }
+    </script>
+    </head>
+    <body style="padding: 0px;margin:0px;">
+    <div id="app">
+    <!-- 主页 -->
+    <div style="width:100vw;height: 100vh;">
+        <div style="display:flex;padding:20px 20px 0px 20px;">
+            <div style="width: 60px;" @click="getPopShow"><img src="./image/zuojiantou.png" style="width:20px;height:20px;" /></div>
+        </div>
+        <div style="text-align: center;margin-top: 80px;">
+            <img src="./image/wenjian.png" />
+        </div>
+        <div style="text-align:center;">
+            <div style="font-size:21px;color:rgba(0, 0, 0, 0.85);margin-top: 35px;font-weight: 800;word-wrap: break-word;padding: 0px 20px;">{{fileName}}</div>
+            <div style="font-size: 16px;color: rgba(88, 88, 88, 1);margin-top: 15px;font-weight: 600;display:flex;justify-content: center;">
+                <div style="width:270px; height: 42px;">
+                    <span v-if="!previewEnable">暂不可以打开此类文件，你可以使用其他应用打开并预览。</span>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top:220px;text-align: center;">
+            <el-button v-if="previewEnable" type="primary" size="large" @click="toPreview" style="width: 200px;background: #0072fd;">预览</el-button>
+            <el-button v-else type="primary" size="large" @click="otherAppOpen" style="width: 200px;background: #0072fd;">用其他应用打开</el-button>
+        </div>
+    </div>
+    <!-- /主页  -->
+
+    </div>         
+    </body>
+    <script  lang="ts">
+
+        const App = {
+        created() {
+        },
+        data() {
+          return {
+            fileName:'',
+            previewEnable:false,
+            remoteUrl:'',
+            fileEXTArr:[],
+            fileEXTStr:'',
+
+          }
+        },
+        methods:{
+            getPopShow(){
+              if(document.referrer.includes('person_log.html')||document.referrer.includes('project_log.html')||document.referrer.includes('safe_log_js.html')||document.referrer.includes('safe_log_sy.html')||document.referrer.includes('safe_log_ty.html')){
+                history.go(-1);
+              }else{
+                history.go(-2);
+              }
+                
+            },
+            getQueryString(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+                var r = window.location.search.substr(1).match(reg); //获取url中"?"符后的字符串并正则匹配
+                var context = "";
+                if (r != null)
+                    context = decodeURIComponent(r[2]);
+                reg = null;
+                r = null;
+                return context == null || context == "" || context == "undefined" ? "" : context;
+            },
+            otherAppOpen(){
+                let localUrl = this.getQueryString('localUrl');
+                invokeCSharpAction(localUrl);  //ios
+                testJsObject.OtherApp(localUrl); //android
+
+            },
+            toPreview(){
+                if(['png','jpeg','jpg'].includes(this.fileEXTStr)){
+                    window.location.href='./preview_img.html?remoteUrl='+this.remoteUrl;
+                }else if(['mp4','wav','flv','mp3'].includes(this.fileEXTStr)){
+                    window.location.href='./preview_video.html?remoteUrl='+this.remoteUrl;
+                }else{
+                    window.location.href='./preview_online.html?remoteUrl='+this.remoteUrl;
+                    // window.location.href="http://218.56.36.168:29084/onlinePreview?url="+encodeURIComponent(this.arrayBufferToBase64(this.strToUtf8Bytes('https://gtcloud.gangtongdata.com/statictest'+this.remoteUrl)));
+                }
+            },
+            strToUtf8Bytes(str) {
+              let utf8 = [];
+              for (let ii = 0; ii < str.length; ii++) {
+                let charCode = str.charCodeAt(ii);
+                if (charCode < 0x80) utf8.push(charCode);
+                else if (charCode < 0x800) {
+                  utf8.push(0xc0 | (charCode >> 6), 0x80 | (charCode & 0x3f));
+                } else if (charCode < 0xd800 || charCode >= 0xe000) {
+                  utf8.push(0xe0 | (charCode >> 12), 0x80 | ((charCode >> 6) & 0x3f), 0x80 | (charCode & 0x3f));
+                } else {
+                  ii++;
+                  // Surrogate pair:
+                  // UTF-16 encodes 0x10000-0x10FFFF by subtracting 0x10000 and
+                  // splitting the 20 bits of 0x0-0xFFFFF into two halves
+                  charCode = 0x10000 + (((charCode & 0x3ff) << 10) | (str.charCodeAt(ii) & 0x3ff));
+                  utf8.push(
+                    0xf0 | (charCode >> 18),
+                    0x80 | ((charCode >> 12) & 0x3f),
+                    0x80 | ((charCode >> 6) & 0x3f),
+                    0x80 | (charCode & 0x3f),
+                  );
+                }
+              }
+              //兼容汉字，ASCII码表最大的值为127，大于127的值为特殊字符
+              for(let jj=0;jj<utf8.length;jj++){
+                  var code = utf8[jj];
+                  if(code>127){
+                      utf8[jj] = code - 256;
+                  }
+              }
+              return utf8;
+            },
+            arrayBufferToBase64(buffer) {
+                let binary = '';
+                let bytes = new Uint8Array(buffer);
+                let len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode( bytes[ i ] );
+                }
+                return window.btoa( binary );
+            }
+        },
+        mounted() {
+            window['getPopShow'] = this.getPopShow;
+            this.fileName = this.getQueryString('fileName');
+            this.remoteUrl = this.getQueryString('remoteUrl');
+            let allow = ['docx','doc','xlsx','xls','pdf','ppt','pptx','png','jpg','jpeg','mp3','mp4','wav','flv'];
+            this.fileEXTArr = this.remoteUrl.split('.');
+            this.fileEXTStr = this.fileEXTArr[this.fileEXTArr.length - 1].toLowerCase();
+            if(allow.includes(this.fileEXTStr)){
+                this.previewEnable = true;
+            }
+        },
+        setup() {
+
+        },
+      };
+      const app = Vue.createApp(App);
+      app.use(ElementPlus);
+      app.use(vant);
+      app.mount("#app");
+
+
+</script>
+<script>
+//初始化一下就可以了，
+// let vConsole = new VConsole();
+
+</script>
+<style type="text/css">
+    .main-item{
+       padding:15px 15px 15px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    .main-item1{
+       padding:0px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    input::-ms-input-placeholder{text-align: right;}
+input::-webkit-input-placeholder{text-align: right;}
+input{
+    text-align: right !important;
+    font-size: 16px;
+}
+/*.van-popup--center{
+max-width: 100vw;
+margin: 0px;
+}*/
+p{
+    padding: 0px;
+    margin: 0px;
+}
+.edit-main{
+   background:#f5f6f7;padding:20px;width:calc(100vw - 40px); height:calc(100vh - 40px);position:fixed;top: 0px; 
+}
+.dialog-main{
+    position: fixed;z-index: 9999;height: 100vh;width: 100vw;background: rgba(0, 0, 0,0.4);left: 0px;top: 0px; display: flex;align-items: center;justify-content: center;flex-direction: column;display: none;
+}
+</style>
+</html>

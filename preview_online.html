@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+        <title>下载</title>
+     <script src="./js/vue.global.js"></script>
+    <script src="./js/axios.js"></script>    
+    <link rel="stylesheet" href="./css/element-plus.css">
+    <script src="./js/element-plus.js"></script>
+    <script src="./tinymce/js/tinymce/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="./js/jquery-3.4.1.min.js"></script>  
+    <script src="./js/JsFileSaver.js"></script>      
+    <script src="./js/recorder-core.js" charset="UTF-8"></script>
+    <script src="./js/wav.js" charset="UTF-8"></script>
+    <script src="./js/pcm.js" charset="UTF-8"></script>
+    <link rel="stylesheet" href="./css/vant.css" />
+    <!-- 引入 Vue 和 Vant 的 JS 文件 -->
+    <script src="./js/vant.min.js"></script>
+    <script type="text/javascript">
+        function invokeCSharpAction(data)
+        {
+            try{
+                window.webkit.messageHandlers.invokeAction.postMessage(data);
+            }catch (err) {
+            }
+        }
+
+        function Base64() {
+
+    // private property
+    var _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+
+    // public method for encoding
+    this.encode = function (input) {
+    if(!input){ return console.log('请传入要加密的值')}
+        var output = "";
+        var chr1, chr2, chr3, enc1, enc2, enc3, enc4;
+        var i = 0;
+        input = _utf8_encode(input);
+        while (i < input.length) {
+            chr1 = input.charCodeAt(i++);
+            chr2 = input.charCodeAt(i++);
+            chr3 = input.charCodeAt(i++);
+            enc1 = chr1 >> 2;
+            enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+            enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
+            enc4 = chr3 & 63;
+            if (isNaN(chr2)) {
+                enc3 = enc4 = 64;
+            } else if (isNaN(chr3)) {
+                enc4 = 64;
+            }
+            output = output +
+            _keyStr.charAt(enc1) + _keyStr.charAt(enc2) +
+            _keyStr.charAt(enc3) + _keyStr.charAt(enc4);
+        }
+        return output;
+    }
+
+    // public method for decoding
+    this.decode = function (input) {
+    if(!input){return console.log('请传入要解密的值')}
+        var output = "";
+        var chr1, chr2, chr3;
+        var enc1, enc2, enc3, enc4;
+        var i = 0;
+        input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+        while (i < input.length) {
+            enc1 = _keyStr.indexOf(input.charAt(i++));
+            enc2 = _keyStr.indexOf(input.charAt(i++));
+            enc3 = _keyStr.indexOf(input.charAt(i++));
+            enc4 = _keyStr.indexOf(input.charAt(i++));
+            chr1 = (enc1 << 2) | (enc2 >> 4);
+            chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+            chr3 = ((enc3 & 3) << 6) | enc4;
+            output = output + String.fromCharCode(chr1);
+            if (enc3 != 64) {
+                output = output + String.fromCharCode(chr2);
+            }
+            if (enc4 != 64) {
+                output = output + String.fromCharCode(chr3);
+            }
+        }
+        output = _utf8_decode(output);
+        return output;
+    }
+
+    // private method for UTF-8 encoding
+    var _utf8_encode = function (string) {
+        string = string.replace(/\r\n/g,"\n");
+        var utftext = "";
+        for (var n = 0; n < string.length; n++) {
+            var c = string.charCodeAt(n);
+            if (c < 128) {
+                utftext += String.fromCharCode(c);
+            } else if((c > 127) && (c < 2048)) {
+                utftext += String.fromCharCode((c >> 6) | 192);
+                utftext += String.fromCharCode((c & 63) | 128);
+            } else {
+                utftext += String.fromCharCode((c >> 12) | 224);
+                utftext += String.fromCharCode(((c >> 6) & 63) | 128);
+                utftext += String.fromCharCode((c & 63) | 128);
+            }
+        }
+        return utftext;
+    }
+    // private method for UTF-8 decoding
+   var  _utf8_decode = function (utftext) {
+        var string = "";
+        var i = 0;
+        let c =0, c1 =0, c2 = 0;
+        while ( i < utftext.length ) {
+            c = utftext.charCodeAt(i);
+            if (c < 128) {
+                string += String.fromCharCode(c);
+                i++;
+            } else if((c > 191) && (c < 224)) {
+                c2 = utftext.charCodeAt(i+1);
+                string += String.fromCharCode(((c & 31) << 6) | (c2 & 63));
+                i += 2;
+            } else {
+                c2 = utftext.charCodeAt(i+1);
+                c1 = utftext.charCodeAt(i+2);
+                string += String.fromCharCode(((c & 15) << 12) | ((c2 & 63) << 6) | (c1 & 63));
+                i += 3;
+            }
+        }
+        return string;
+    }
+}
+    </script>
+    </head>
+    <body style="padding: 0px;margin:0px;">
+    <div id="app">
+    <div v-if="loading"  style="position:absolute;z-index: 9999;width: 100vw;height: 100vh;background: white;text-align: center;display: flex;align-items: center;justify-content: center;">
+      <van-loading size="24px" color="#0094ff">在线预览解析中...</van-loading>   
+    </div>
+    <!-- 主页 -->
+    <div style="width:100vw;height: 100vh;">
+        <div style="display:flex;padding:20px;">
+            <div style="width: 60px;" @click="getPopShow"><img src="./image/zuojiantou.png" style="width:20px;height:20px;" /></div>
+        </div>
+        <iframe id="iframe-con" :src="iframeSrc" frameborder="none" style="width:100vw;height: calc(100vh - 64px);">
+          
+        </iframe>
+    </div>
+    <!-- /主页  -->
+
+    </div>         
+    </body>
+    <script  lang="ts">
+
+        const App = {
+        created() {
+        },
+        data() {
+          return {
+            iframeSrc:'',
+            loading:true,
+          }
+        },
+        methods:{
+            getPopShow(){
+                history.back();
+            },
+            getQueryString(name) {
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
+                var r = window.location.search.substr(1).match(reg); //获取url中"?"符后的字符串并正则匹配
+                var context = "";
+                if (r != null)
+                    context = decodeURIComponent(r[2]);
+                reg = null;
+                r = null;
+                return context == null || context == "" || context == "undefined" ? "" : context;
+            },
+            otherAppOpen(){
+                let localUrl = this.getQueryString('localUrl');
+                invokeCSharpAction(localUrl);  //ios
+                testJsObject.OtherApp(localUrl); //android
+
+            },
+            strToUtf8Bytes(str) {
+              let utf8 = [];
+              for (let ii = 0; ii < str.length; ii++) {
+                let charCode = str.charCodeAt(ii);
+                if (charCode < 0x80) utf8.push(charCode);
+                else if (charCode < 0x800) {
+                  utf8.push(0xc0 | (charCode >> 6), 0x80 | (charCode & 0x3f));
+                } else if (charCode < 0xd800 || charCode >= 0xe000) {
+                  utf8.push(0xe0 | (charCode >> 12), 0x80 | ((charCode >> 6) & 0x3f), 0x80 | (charCode & 0x3f));
+                } else {
+                  ii++;
+                  // Surrogate pair:
+                  // UTF-16 encodes 0x10000-0x10FFFF by subtracting 0x10000 and
+                  // splitting the 20 bits of 0x0-0xFFFFF into two halves
+                  charCode = 0x10000 + (((charCode & 0x3ff) << 10) | (str.charCodeAt(ii) & 0x3ff));
+                  utf8.push(
+                    0xf0 | (charCode >> 18),
+                    0x80 | ((charCode >> 12) & 0x3f),
+                    0x80 | ((charCode >> 6) & 0x3f),
+                    0x80 | (charCode & 0x3f),
+                  );
+                }
+              }
+              //兼容汉字，ASCII码表最大的值为127，大于127的值为特殊字符
+              for(let jj=0;jj<utf8.length;jj++){
+                  var code = utf8[jj];
+                  if(code>127){
+                      utf8[jj] = code - 256;
+                  }
+              }
+              return utf8;
+            },
+            arrayBufferToBase64(buffer) {
+                let binary = '';
+                let bytes = new Uint8Array(buffer);
+                let len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode( bytes[ i ] );
+                }
+                return window.btoa( binary );
+            }
+        },
+        mounted() {
+            window['getPopShow'] = this.getPopShow;
+            let ba = new Base64();
+            this.iframeSrc = "http://fview.gangtongdata.com/onlinePreview?url="+ba.encode('https://gtcloud.gangtongdata.com/'+this.getQueryString('remoteUrl'));
+            let iframe = document.getElementById('iframe-con');
+            iframe.onload = ()=>{
+              this.loading= false;
+              console.log('wanbi');
+            }
+
+        },
+        setup() {
+
+        },
+      };
+      const app = Vue.createApp(App);
+      app.use(ElementPlus);
+      app.use(vant);
+      app.mount("#app");
+
+
+</script>
+<script>
+//初始化一下就可以了，
+// let vConsole = new VConsole();
+
+</script>
+<style type="text/css">
+    .main-item{
+       padding:15px 15px 15px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    .main-item1{
+       padding:0px 20px;
+       border-bottom: 1px solid #f0f0f0;
+       background:white; 
+    }
+    input::-ms-input-placeholder{text-align: right;}
+input::-webkit-input-placeholder{text-align: right;}
+input{
+    text-align: right !important;
+    font-size: 16px;
+}
+/*.van-popup--center{
+max-width: 100vw;
+margin: 0px;
+}*/
+p{
+    padding: 0px;
+    margin: 0px;
+}
+.edit-main{
+   background:#f5f6f7;padding:20px;width:calc(100vw - 40px); height:calc(100vh - 40px);position:fixed;top: 0px; 
+}
+.dialog-main{
+    position: fixed;z-index: 9999;height: 100vh;width: 100vw;background: rgba(0, 0, 0,0.4);left: 0px;top: 0px; display: flex;align-items: center;justify-content: center;flex-direction: column;display: none;
+}
+</style>
+</html>
